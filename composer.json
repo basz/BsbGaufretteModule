@@ -1,0 +1,28 @@
+{
+    "name": "bushbaby/gaufrette",
+    "description": "A Zend Framework 2 module that provides easy configuration and access to the Gaufrette filesystem abstraction layer.",
+    "type": "library",
+    "keywords": [
+    ],
+    "homepage": "https://github.com/basz/BsbGaufrette",
+    "authors": [
+        {
+            "name": "Bas Kamer",
+            "email": "bas@bushbaby.nl",
+            "homepage": "http://bushbaby.nl"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3.",
+        "knplabs/gaufrette": "dev-master",
+        "zendframework/zendframework": "dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "BsbGaufrette": "src/"
+        },
+        "classmap": [
+            "Module.php"
+        ]
+    }
+}
