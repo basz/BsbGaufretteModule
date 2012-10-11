@@ -8,16 +8,6 @@ use Zend\ServiceManager\FactoryInterface;
 class AdapterFactoryManager extends AbstractPluginManager {
 
     /**
-     * Default set of factories classes
-     *
-     * @var array
-     */
-    protected $factoryAliases = array(
-        'local' => 'BsbGaufrette\Service\Gaufrette\LocalAdapterFactory',
-        'safelocal' => 'BsbGaufrette\Service\Gaufrette\SafeLocalAdapterFactory',
-    );
-
-    /**
      * Share by default
      *
      * @var array
@@ -31,8 +21,33 @@ class AdapterFactoryManager extends AbstractPluginManager {
      */
     protected $autoAddInvokableClass = true;
 
-    public function getFactoryAlias($alias) {
-        return isset($this->factoryAliases[$alias]) ? $this->factoryAliases[$alias] : $alias;
+    /**
+     * Default set of factories classes
+     *
+     * @var array
+     */
+    protected $factoryClasses = array(
+        'local' => 'BsbGaufrette\Service\Gaufrette\LocalAdapterFactory',
+        'safelocal' => 'BsbGaufrette\Service\Gaufrette\SafeLocalAdapterFactory',
+    );
+
+    /**
+     * Set factory
+     *
+     * Overwrites parent implementation to enable class lookup from the default list of plugable factories
+     *
+     * @param  string                           $name
+     * @param  string|FactoryInterface|callable $factory
+     * @param  bool                             $shared
+     * @return ServiceManager
+     * @throws Exception\InvalidArgumentException
+     * @throws Exception\InvalidServiceNameException
+     */
+    public function setFactory($name, $factory, $shared = true)
+    {
+        $factory = isset($this->factoryClasses[$factory]) ? $this->factoryClasses[$factory] : $factory;
+
+        return parent::setFactory($name, $factory, $shared);
     }
 
     /**

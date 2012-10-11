@@ -269,11 +269,10 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         
         if (!$this->getFactoryManager()->has($name)) {
             $filesystem = $this->filesystems[$name];
-            $adapterName = $filesystem['factory']['name'];
-            $factory = $this->getFactoryManager()->getFactoryAlias($adapterName);
-            $this->getFactoryManager()->setFactory($name, $factory);
 
-            $options = isset($filesystem['factory']['options'])? $filesystem['factory']['options'] : null;
+            $this->getFactoryManager()->setFactory($name, $filesystem['factory']['name']);
+
+            $options = isset($filesystem['options'])? $filesystem['factory']['options'] : null;
             return $this->getFactoryManager()->get($name, $options);
         }
 
