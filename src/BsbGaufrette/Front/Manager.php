@@ -5,7 +5,7 @@ namespace BsbGaufrette\Front;
 use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
-use BsbGaufrette\Gaufrette\FactoryManager;
+use BsbGaufrette\Gaufrette\AdapterFactoryManager;
 use BsbGaufrette\Doctrine\FSInterface;
 
 class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
@@ -36,7 +36,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      * method, so options can be passed via the contructor (just
      * like AbstractPluginManager::createFromInvokable).
      *
-     * @var FactoryManager
+     * @var AdapterFactoryManager
      */
     protected $factoryManager;
 
@@ -74,13 +74,11 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         return $this->entityMap;
     }
     
-    public function setFactoryManager($manager) {
-        $this->pluginManager = $manager;
-    }
-    
     protected function getFactoryManager() {
         if ($this->factoryManager == null) {
-            $this->factoryManager = new FactoryManager();
+            $this->factoryManager = new AdapterFactoryManager();
+
+            $this->factoryManager->setServiceLocator($this->getServiceLocator());
         }
         
         return $this->factoryManager;

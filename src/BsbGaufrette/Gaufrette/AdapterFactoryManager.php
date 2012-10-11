@@ -5,7 +5,7 @@ namespace BsbGaufrette\Gaufrette;
 use Zend\ServiceManager\AbstractPluginManager;
 use Zend\ServiceManager\FactoryInterface;
 
-class FactoryManager extends AbstractPluginManager {
+class AdapterFactoryManager extends AbstractPluginManager {
 
     /**
      * Default set of factories classes
@@ -18,7 +18,7 @@ class FactoryManager extends AbstractPluginManager {
     );
 
     /**
-     * Do not share by default
+     * Share by default
      *
      * @var array
      */
