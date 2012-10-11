@@ -5,7 +5,7 @@ namespace BsbGaufrette\Front;
 use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
-use BsbGaufrette\Gaufrette\FactoryManager;
+use BsbGaufrette\Gaufrette\AdapterFactoryManager;
 use BsbGaufrette\Doctrine\FSInterface;
 
 class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
@@ -36,7 +36,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      * method, so options can be passed via the contructor (just
      * like AbstractPluginManager::createFromInvokable).
      *
-     * @var FactoryManager
+     * @var AdapterFactoryManager
      */
     protected $factoryManager;
 
@@ -74,13 +74,11 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         return $this->entityMap;
     }
     
-    public function setFactoryManager($manager) {
-        $this->pluginManager = $manager;
-    }
-    
     protected function getFactoryManager() {
         if ($this->factoryManager == null) {
-            $this->factoryManager = new FactoryManager();
+            $this->factoryManager = new AdapterFactoryManager();
+
+            $this->factoryManager->setServiceLocator($this->getServiceLocator());
         }
         
         return $this->factoryManager;
@@ -261,7 +259,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
     protected function getFilename($propName, $id) {
         $filter = new \Zend\Filter\Word\CamelCaseToDash();
 
-        return sprintf("%s-%s", str_pad($id, 8, '0', STR_PAD_LEFT), $filter->filter($propName));
+        return sprintf("%s-%s", $filter->filter($propName), str_pad($id, 8, '0', STR_PAD_LEFT));
     }
 
     protected function retrieveFilesystem($name) {
