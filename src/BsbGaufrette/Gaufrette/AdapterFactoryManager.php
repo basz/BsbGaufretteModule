@@ -8,20 +8,6 @@ use Zend\ServiceManager\FactoryInterface;
 class AdapterFactoryManager extends AbstractPluginManager {
 
     /**
-     * Share by default
-     *
-     * @var array
-     */
-    protected $shareByDefault = true;
-
-    /**
-     * Whether or not to auto-add a class as an invokable class if it exists
-     *
-     * @var bool
-     */
-    protected $autoAddInvokableClass = true;
-
-    /**
      * Default set of factories classes
      *
      * @var array
