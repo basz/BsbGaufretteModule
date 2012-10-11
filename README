@@ -42,7 +42,7 @@ Planned
     persist a Gaufrette\File
 
  - naming strategies
-    LeftPaddedPropLast      : preview-image-0000000XX (default/current)
+    LeftPaddedPropLast      : preview-image-0000000XX (default)
     DirectorySplit          : /preview/image/0000000XX
     LeftPaddedPropLast      : 0000000XX-preview-image
     Hashedup

@@ -259,7 +259,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
     protected function getFilename($propName, $id) {
         $filter = new \Zend\Filter\Word\CamelCaseToDash();
 
-        return sprintf("%s-%s", str_pad($id, 8, '0', STR_PAD_LEFT), $filter->filter($propName));
+        return sprintf("%s-%s", $filter->filter($propName), str_pad($id, 8, '0', STR_PAD_LEFT));
     }
 
     protected function retrieveFilesystem($name) {
