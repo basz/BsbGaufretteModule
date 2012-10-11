@@ -13,6 +13,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
     const SET_METHOD_PREFIX = 'persist';
     const GET_METHOD_PREFIX = 'retrieve';
     const HAS_METHOD_PREFIX = 'has';
+    const FILENAME_METHOD_PREFIX = 'filename';
 
     /**
      * Associative array of named filesystems and it's options
@@ -136,7 +137,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      */
     public function __call($method, $arguments) {
         // detect method and property name
-        if (!preg_match(sprintf('/^(%s|%s|%s)(.+)$/', self::SET_METHOD_PREFIX, self::GET_METHOD_PREFIX, self::HAS_METHOD_PREFIX), $method, $match)) {
+        if (!preg_match(sprintf('/^(%s|%s|%s|%s)(.+)$/', self::SET_METHOD_PREFIX, self::GET_METHOD_PREFIX, self::HAS_METHOD_PREFIX, self::FILENAME_METHOD_PREFIX), $method, $match)) {
             throw new \BadMethodCallException(sprintf('Method call to "%s" must be in the form of with actionXxxxYyyyy(), received "%s"', __CLASS__, $method));
         }
 
@@ -216,6 +217,24 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         $filename = $this->getFilename($propName, $entity->getId());
 
         return !!$fs->exists($filename);
+    }
+
+    protected function filenameItem($propName, FSInterface $entity) {
+        if(!$entity instanceof FSInterface) {
+            throw new \InvalidArgumentException(sprintf(
+                '%s: must implement "%s"', get_class($entity),
+                'BsbGaufrette\Doctrine\FSInterface'
+            ));
+        }
+
+        if ( $entity->getId() == null ) {
+            return false;
+        }
+
+        $fsName = $this->lookupNameInEntityMap(get_class($entity), $propName);
+        $fs = $this->retrieveFilesystem($fsName);
+
+        return $this->getFilename($propName, $entity->getId());
     }
     /**
      * @param $propName
