@@ -174,7 +174,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             ));
         }
 
-        $fsName = $this->lookupNameInEntityMap(get_class($entity), $propName);
+        $fsName = $this->lookupNameInEntityMap($entity, $propName);
         $fs = $this->retrieveFilesystem($fsName);
 
         $filename = $this->getFilename($propName, $entity->getId());
@@ -211,7 +211,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             return false;
         }
 
-        $fsName = $this->lookupNameInEntityMap(get_class($entity), $propName);
+        $fsName = $this->lookupNameInEntityMap($entity, $propName);
         $fs = $this->retrieveFilesystem($fsName);
 
         $filename = $this->getFilename($propName, $entity->getId());
@@ -231,7 +231,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             return false;
         }
 
-        $fsName = $this->lookupNameInEntityMap(get_class($entity), $propName);
+        $fsName = $this->lookupNameInEntityMap($entity, $propName);
         $fs = $this->retrieveFilesystem($fsName);
 
         return $this->getFilename($propName, $entity->getId());
@@ -256,7 +256,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             ));
         }
 
-        $fsName = $this->lookupNameInEntityMap(get_class($entity), $propName);
+        $fsName = $this->lookupNameInEntityMap($entity, $propName);
         $fs = $this->retrieveFilesystem($fsName);
 
         $filename = $this->getFilename($propName, $entity->getId());
@@ -303,11 +303,21 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      * 
      * When the value is an array property names are compared.
      * 
-     * @param type $entityClass
+     * @param BsbGaufrette\Doctrine\FSInterface $entity
      * @param type $propName
      * @return string Name of the FS
      */
-    protected function lookupNameInEntityMap($entityClass, $propName) {
+    protected function lookupNameInEntityMap($entity, $propName) {
+        $classes = (array(get_class($entity)=>get_class($entity)) + class_parents($entity));
+        while(count($classes)) {
+            $entityClass = array_shift($classes);
+            if (!in_array('BsbGaufrette\Doctrine\FSInterface', class_implements($entityClass))) {
+                $entityClass = $lastEntityClass;
+                break;
+            }
+            $lastEntityClass = $entityClass;
+        }
+
         if (!isset($this->entityMap[$entityClass])) {
             return;
         }
