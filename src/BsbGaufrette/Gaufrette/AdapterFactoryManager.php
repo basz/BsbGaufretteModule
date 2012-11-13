@@ -46,13 +46,13 @@ class AdapterFactoryManager extends AbstractPluginManager {
      * @throws Exception\RuntimeException if invalid
      */
     public function validatePlugin($plugin) {
-        if ($plugin instanceof \Gaufrette\Adapter\Base) {
+        if ($plugin instanceof \Gaufrette\Adapter) {
             // we're okay
             return;
         }
 
         throw new \RuntimeException(sprintf(
-                        'Plugin of type %s is invalid; must implement \Gaufrette\Adapter\Base', (is_object($plugin) ? get_class($plugin) : gettype($plugin))
+            'Plugin of type %s is invalid; must implement \Gaufrette\Adapter', (is_object($plugin) ? get_class($plugin) : gettype($plugin))
         ));
     }
 
