@@ -12,14 +12,7 @@
 
 namespace BsbGaufrette;
 
-use BsbGaufrette\Front\Manager;
-
 class Module {
-    public function onBootstrap(\Zend\Mvc\MvcEvent $e) {
-        $app = $e->getApplication();
-        $sm = $app->getServiceManager();
-    }
-
     public function getAutoloaderConfig() {
         return array(
             'Zend\Loader\StandardAutoloader' => array(
