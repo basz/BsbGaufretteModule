@@ -14,7 +14,7 @@
     ],
     "require": {
         "php": ">=5.3.3.",
-        "knplabs/gaufrette": "dev-master",
+        "knplabs/gaufrette": "*",
         "zendframework/zendframework": "2.*"
     },
     "autoload": {
