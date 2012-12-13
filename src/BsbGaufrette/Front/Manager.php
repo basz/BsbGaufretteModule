@@ -13,6 +13,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
     const SET_METHOD_PREFIX = 'persist';
     const GET_METHOD_PREFIX = 'retrieve';
     const HAS_METHOD_PREFIX = 'has';
+    const META_METHOD_PREFIX = 'meta';
     const FILENAME_METHOD_PREFIX = 'filename';
 
     /**
@@ -21,11 +22,11 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      * @var array
      */
     protected $filesystems;
-    
+
     /**
-     * Associative array that keeps track of entity class name, properties and 
+     * Associative array that keeps track of entity class name, properties and
      * a name of a filesystem.
-     * 
+     *
      * @var array
      */
     protected $entityMap;
@@ -74,14 +75,14 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
     {
         return $this->entityMap;
     }
-    
+
     protected function getFactoryManager() {
         if ($this->factoryManager == null) {
             $this->factoryManager = new AdapterFactoryManager();
 
             $this->factoryManager->setServiceLocator($this->getServiceLocator());
         }
-        
+
         return $this->factoryManager;
     }
 
@@ -137,7 +138,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      */
     public function __call($method, $arguments) {
         // detect method and property name
-        if (!preg_match(sprintf('/^(%s|%s|%s|%s)(.+)$/', self::SET_METHOD_PREFIX, self::GET_METHOD_PREFIX, self::HAS_METHOD_PREFIX, self::FILENAME_METHOD_PREFIX), $method, $match)) {
+        if (!preg_match(sprintf('/^(%s|%s|%s|%s|%s)(.+)$/', self::SET_METHOD_PREFIX, self::GET_METHOD_PREFIX, self::META_METHOD_PREFIX, self::HAS_METHOD_PREFIX, self::FILENAME_METHOD_PREFIX), $method, $match)) {
             throw new \BadMethodCallException(sprintf('Method call to "%s" must be in the form of with actionXxxxYyyyy(), received "%s"', __CLASS__, $method));
         }
 
@@ -160,7 +161,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
      * @throws \InvalidArgumentException empty identifier on entity
      * @todo add support for stream_resource
      */
-    protected function persistItem($propName, FSInterface $entity, $content=null) {
+    protected function persistItem($propName, FSInterface $entity, $content=null, $meta=null) {
         if(!$entity instanceof FSInterface) {
             throw new \InvalidArgumentException(sprintf(
                 '%s: must implement "%s"', get_class($entity),
@@ -182,10 +183,15 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         // content is null we delete
         if ($content === null && $fs->exists($filename)) {
             $fs->delete($filename);
+            if ($fs->exists($filename . '-meta')) {
+                $fs->delete($filename . '-meta');
+            }
+
+            return;
         }
 
-        // content is file on disc to be read
-        if (is_string($content)) {
+
+        if (is_string($content)) { // content is file on disc to be read
             if (is_file($content)) {
                 if (!is_readable($content)) {
                     // @todo
@@ -197,6 +203,12 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             }
         }
 
+        // @todo add is_resource here
+
+        if (is_array($meta)) {
+            $meta = array_merge($meta, array('filename' => $filename));
+            $this->metaItem($propName, $entity, $meta);
+        }
     }
 
     protected function hasItem($propName, FSInterface $entity) {
@@ -236,6 +248,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
 
         return $this->getFilename($propName, $entity->getId());
     }
+    
     /**
      * @param $propName
      * @param \BsbGaufrette\Doctrine\FSInterface $entity
@@ -265,7 +278,41 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             return null;
         }
 
-        return $this->fs->get($filename);
+        return $fs->read($filename);
+    }
+    /**
+     * Stores/retrieve meta data
+     *
+     * @param $propName
+     * @param \BsbGaufrette\Doctrine\FSInterface $entity
+     * @return mixed | null
+     * @throws \InvalidArgumentException empty identifier on entity
+     */
+    protected function metaItem($propName, FSInterface $entity, $meta=null) {
+        if(!$entity instanceof FSInterface) {
+            throw new \InvalidArgumentException(sprintf(
+                '%s: must implement "%s"', get_class($entity),
+                'BsbGaufrette\Doctrine\FSInterface'
+            ));
+        }
+
+        if ( $entity->getId() == null ) {
+            throw new \InvalidArgumentException(sprintf(
+                'Can\'t %s data without %s::getId() returning some sort of identifier.', self::GET_METHOD_PREFIX, get_class($entity)
+            ));
+        }
+
+        $fsName = $this->lookupNameInEntityMap($entity, $propName);
+        $fs = $this->retrieveFilesystem($fsName);
+        $filename = $this->getFilename($propName, $entity->getId()) . '-meta';
+
+        if ($meta === null && $fs->exists($filename)) {
+            return unserialize($fs->read($filename));
+        }
+
+        if ($meta !== null) {
+            $fs->write($filename, serialize($meta));
+        }
     }
 
     /**
@@ -285,7 +332,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         if (!isset($this->filesystems[$name])) {
             throw new \Exception(sprintf('No filesystem configured for "%s".', $name));
         }
-        
+
         if (!$this->getFactoryManager()->has($name)) {
             $filesystem = $this->filesystems[$name];
 
@@ -297,12 +344,12 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
 
         return $this->getFactoryManager()->get($name);
     }
-    
+
     /**
      * Find the name of the FS by looking up the fq classname as key in an array
-     * 
+     *
      * When the value is an array property names are compared.
-     * 
+     *
      * @param BsbGaufrette\Doctrine\FSInterface $entity
      * @param type $propName
      * @return string Name of the FS
@@ -321,7 +368,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
         if (!isset($this->entityMap[$entityClass])) {
             return;
         }
-        
+
         // fqcn only?
         $map = $this->entityMap[$entityClass];
         if (is_string($map)) {
@@ -333,7 +380,7 @@ class Manager implements ServiceLocatorAwareInterface, ServiceLocatorInterface {
             if (isset($map[$propName]) && is_string($map[$propName]) ) {
                 return $map[$propName];
             }
-            
+
             if (isset($map['*']) && is_string($map['*']) ) {
                 return $map['*'];
             }
